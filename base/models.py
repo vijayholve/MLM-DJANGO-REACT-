@@ -18,7 +18,11 @@ class MLMUser(AbstractUser):
         'self', on_delete=models.SET_NULL, null=True, blank=True, related_name='right_node'
     )
     custom_sponsor_id = models.CharField(max_length=10, unique=True, editable=False)
-
+    parent= models.OneToOneField(
+        'self',on_delete=models.SET_NULL, null=True, blank=True,
+       related_name='children'
+    )
+    
     rank = models.CharField(max_length=20, default='Bronze')
     total_sales = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     left_sales = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -29,6 +33,8 @@ class MLMUser(AbstractUser):
     is_active = models.BooleanField(default=True)
     groups = models.ManyToManyField(Group, related_name='mlmuser_groups', blank=True)
     user_permissions = models.ManyToManyField(Permission, related_name='mlmuser_permissions', blank=True)
+    position =models.CharField(max_length=20,blank=True,null=True)
+
     def __str__(self):
         return self.username
 
@@ -101,3 +107,57 @@ class Payout(models.Model):
 
     def __str__(self):
         return f"Payout {self.amount} - {self.status} for {self.user.username}"
+
+
+
+class Features(models.Model):
+    name = models.CharField(max_length=100) 
+    blocked = models.BooleanField(default=False) 
+
+    def block(self):
+        self.blocked = True
+        self.save()
+
+    def unblock(self):
+        self.blocked = False
+        self.save()
+
+    def __str__(self):
+        return self.name
+
+
+class Plan(models.Model):
+    name = models.CharField(max_length=100)
+    CONDITION_CHOICES = [
+        ('one time', 'One Time'),
+        ('recurring', 'Recurring'),
+    ]
+    plan_type = models.CharField(max_length=10, choices=CONDITION_CHOICES, null=True, blank=True)
+    price = models.IntegerField()
+    blocked = models.BooleanField(default=False)
+
+    def block(self):
+        self.blocked = True
+        self.save()
+
+    def unblock(self):
+        self.blocked = False
+        self.save()
+
+    def __str__(self):
+        return self.name
+class Kyc(models.Model):
+    user= models.OneToOneField(MLMUser,on_delete=models.CASCADE,null=True,blank=True,related_name='kyc')
+    front_aadhar_img =models.ImageField(upload_to='kyc/')
+    back_aadhar_img =models.ImageField(upload_to='kyc/')
+    front_pan_img = models.ImageField(upload_to='kyc/')
+    back_pan_img = models.ImageField(upload_to='kyc/')
+    status = models.CharField(max_length= 100,choices= [
+          ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ] 
+                              ,default='Pending')
+    blocked=models.BooleanField(default=False) 
+    def __str__(self):
+        return f'{ self.id }   {self.status} '

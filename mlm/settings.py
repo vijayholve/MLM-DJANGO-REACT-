@@ -13,8 +13,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,7 +32,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'mlm.urls'
 
 TEMPLATES = [
     {
@@ -53,6 +50,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'mlm.wsgi.application'
+
+ALLOWED_HOSTS = ["*"]
+from datetime  import timedelta
 
 
 DATABASES = {
@@ -95,16 +95,13 @@ STATIC_URL = 'static/'
 
 import os
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-        "http://127.0.0.1:3000",
-]
+# OR, keep the specific origins and remove CORS_ALLOW_ALL_ORIGINS
+# CORS_ALLOW_ALL_ORIGINS = True  # This should be removed
+
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 import os
 # settings.py
 MEDIA_URL = '/media/'
@@ -112,13 +109,53 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MIDDLEWARE+=[      
              'corsheaders.middleware.CorsMiddleware',
 ]
-INSTALLED_APPS+=[
+INSTALLED_APPS += [
+    'plan',
     'base',
+    'authentication',
     'rest_framework',
-        'corsheaders',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'kyc',
+    'corsheaders',
 ]
+
 AUTHENTICATION_BACKENDS = [
-    'base.auth_backends.MLMUserBackend',
     'django.contrib.auth.backends.ModelBackend',
+
 ]
-AUTH_USER_MODEL = 'base.MLMUser'    
+
+AUTH_USER_MODEL = 'base.MLMUser'
+    
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}# CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+]
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000', 'http://localhost:5173']
+
+# JWT Cookie Configuration
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Adjust as needed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # Adjust as needed
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+MIDDLEWARE += ['corsheaders.middleware.CorsMiddleware'] 
+
+
+APPEND_SLASH = False
+ROOT_URLCONF = 'mlm.urls'
+DEBUG = False
+CORS_ALLOW_ALL_ORIGINS = True
